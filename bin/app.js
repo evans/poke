@@ -9,8 +9,14 @@ let givenUrl = ''
 program
   .version(version)
   .arguments('<url>')
-  .option('-r, --retry [value]', 'broken links are retried with new hostname')
-  .option('-s, --shallow', 'do not check pages rooted outside of provided url')
+  .option('-r, --retry [value]', 'Broken links are retried with new hostname')
+  .option('-s, --shallow', 'Do not check pages rooted outside of provided url')
+  .option('-q, --quiet', 'Supress warnings and loading messages(for ci)')
+  .option(
+    '-m, --method [head|post]',
+    'HTTP method used to check links, defaults to head'
+  )
+  .option('--skip-images', 'Skip the image checks')
   .action(url => {
     givenUrl = url
   })
@@ -22,7 +28,19 @@ if (!givenUrl) {
   process.exit(1)
 }
 
+if (
+  program.method &&
+  (program.method.toLowerCase() !== 'get' &&
+    program.method.toLowerCase() !== 'head')
+) {
+  console.error(chalk.red('Error: method must be head or get'))
+  process.exit(1)
+}
+
 poke(givenUrl, {
   retry: program.retry,
-  shallow: program.shallow
+  shallow: program.shallow,
+  quiet: program.quiet,
+  method: program.method || 'head',
+  skipImages: program.skipImages
 })
